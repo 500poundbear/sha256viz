@@ -79,9 +79,9 @@ hPrinter =
 view : Model -> Html Msg
 view model =
     div []
-        [ hPrinter
+        [ {-hPrinter
         , kPrinter
-        , div [] [ text "HI" ]
+        ,-} div [] [ text "HI" ]
         ]
 
 

@@ -134,15 +134,16 @@ getNthArray n arr =
             v
 
 
+combineBitArrays : Array Bits -> Array Bits -> Array Bits
+combineBitArrays fst snd = Array.fromList <| List.append (Array.toList fst) (Array.toList snd)
 
-{- Block Iteration#  a  b c d e f g h -}
 
 
-computeHash : Block -> Int -> Bits -> Bits -> Bits -> Bits -> Bits -> Bits -> Bits -> Bits -> Array Bits -> Array Bits -> Array Bits
-computeHash block t a b c d e f g h k hashes =
+computeHash : Block -> Int -> Bits -> Bits -> Bits -> Bits -> Bits -> Bits -> Bits -> Bits -> Array Bits -> Array Bits
+computeHash block t a b c d e f g h state =
     let
         kt =
-            getNthArray t k
+            getNthArray t state
 
         t1 =
             h + Bits.s1 e + Bits.choose e f g + kt + getSchedule t block
@@ -151,7 +152,7 @@ computeHash block t a b c d e f g h k hashes =
             Bits.s0 a + Bits.majority a b c
 
         mhashes =
-            List.map (\n -> getNthArray n hashes) (range 0 7)
+            Array.map (\n -> getNthArray n state) (initialize 8 (\n -> n + 64))
     in
     Array.fromList
         [ {- a -} shiftRightZfBy 0 (t1 + t2)
@@ -162,4 +163,12 @@ computeHash block t a b c d e f g h k hashes =
         , {- f -} e
         , {- g -} f
         , {- h -} g
+        , {- h0 -} shiftRightZfBy 0 <| (getNthArray 0 mhashes) + a
+        , {- h1 -} shiftRightZfBy 0 <| (getNthArray 1 mhashes) + b
+        , {- h2 -} shiftRightZfBy 0 <| (getNthArray 2 mhashes) + c
+        , {- h3 -} shiftRightZfBy 0 <| (getNthArray 3 mhashes) + d
+        , {- h4 -} shiftRightZfBy 0 <| (getNthArray 4 mhashes) + e
+        , {- h5 -} shiftRightZfBy 0 <| (getNthArray 5 mhashes) + f
+        , {- h6 -} shiftRightZfBy 0 <| (getNthArray 6 mhashes) + g
+        , {- h7 -} shiftRightZfBy 0 <| (getNthArray 7 mhashes) + h
         ]
