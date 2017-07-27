@@ -4,6 +4,7 @@ import Array exposing (..)
 import Basics exposing (..)
 import Bits exposing (..)
 import Bitwise exposing (..)
+import Debug exposing (..)
 import List exposing (..)
 import String exposing (..)
 
@@ -135,24 +136,121 @@ getNthArray n arr =
 
 
 combineBitArrays : Array Bits -> Array Bits -> Array Bits
-combineBitArrays fst snd = Array.fromList <| List.append (Array.toList fst) (Array.toList snd)
+combineBitArrays fst snd =
+    Array.fromList <| List.append (Array.toList fst) (Array.toList snd)
 
 
 
-computeHash : Block -> Int -> Bits -> Bits -> Bits -> Bits -> Bits -> Bits -> Bits -> Bits -> Array Bits -> Array Bits
-computeHash block t a b c d e f g h state =
+{- block, times, state, k, -}
+
+
+hashComputer : Block -> Int -> Array Bits -> Array Bits -> Array Bits
+hashComputer block n initialState k =
+    hashComputerIter block 0 n initialState k
+
+
+
+{- For generating from the first set to the nth set -}
+
+
+hashComputerIter : Block -> Int -> Int -> Array Bits -> Array Bits -> Array Bits
+hashComputerIter block q n initialState k =
+    if q >= n then
+        initialState
+    else
+        let
+            newState =
+                computeHash block q initialState k
+        in
+        hashComputerIter block (q + 1) n newState k
+
+
+computeHash : Block -> Int -> Array Bits -> Array Bits -> Array Bits
+computeHash block t state k =
     let
+        aaa =
+            log "computeHash" t
+
+        a =
+            getNthArray 0 state
+
+        b =
+            getNthArray 1 state
+
+        c =
+            getNthArray 2 state
+
+        d =
+            getNthArray 3 state
+
+        e =
+            getNthArray 4 state
+
+        f =
+            getNthArray 5 state
+
+        g =
+            getNthArray 6 state
+
+        h =
+            getNthArray 7 state
+
+        paa =
+            log "a" (printHex a)
+
+        pab =
+            log "b" (printHex b)
+
+        pac =
+            log "c" (printHex c)
+
+        pad =
+            log "d" (printHex d)
+
+        pae =
+            log "e" (printHex e)
+
+        paf =
+            log "f" (printHex f)
+
+        pag =
+            log "g" (printHex g)
+
+        pah =
+            log "h" (printHex h)
+
         kt =
-            getNthArray t state
+            getNthArray t k
 
         t1 =
             h + Bits.s1 e + Bits.choose e f g + kt + getSchedule t block
 
+        hhh =
+            log "" (printHex h)
+
+        hhj =
+            log "" (printHex <| Bits.s1 e)
+
+        hhk =
+            log "" (printHex <| Bits.choose e f g)
+
+        hhl =
+            log "" (printHex kt)
+
+        hhm =
+            log "" (printHex <| getSchedule t block)
+
         t2 =
             Bits.s0 a + Bits.majority a b c
 
+        hhz =
+            log "" (printHex <| Bits.s0 a)
+
+        hhy =
+            log "" (printHex <| Bits.majority a b c)
+
         mhashes =
-            Array.map (\n -> getNthArray n state) (initialize 8 (\n -> n + 64))
+            Array.map (\n -> getNthArray n state) (initialize 8 (\n -> n + 8))
     in
     Array.fromList
         [ {- a -} shiftRightZfBy 0 (t1 + t2)
@@ -163,12 +261,12 @@ computeHash block t a b c d e f g h state =
         , {- f -} e
         , {- g -} f
         , {- h -} g
-        , {- h0 -} shiftRightZfBy 0 <| (getNthArray 0 mhashes) + a
-        , {- h1 -} shiftRightZfBy 0 <| (getNthArray 1 mhashes) + b
-        , {- h2 -} shiftRightZfBy 0 <| (getNthArray 2 mhashes) + c
-        , {- h3 -} shiftRightZfBy 0 <| (getNthArray 3 mhashes) + d
-        , {- h4 -} shiftRightZfBy 0 <| (getNthArray 4 mhashes) + e
-        , {- h5 -} shiftRightZfBy 0 <| (getNthArray 5 mhashes) + f
-        , {- h6 -} shiftRightZfBy 0 <| (getNthArray 6 mhashes) + g
-        , {- h7 -} shiftRightZfBy 0 <| (getNthArray 7 mhashes) + h
+        , {- h0 -} shiftRightZfBy 0 <| getNthArray 0 mhashes + a
+        , {- h1 -} shiftRightZfBy 0 <| getNthArray 1 mhashes + b
+        , {- h2 -} shiftRightZfBy 0 <| getNthArray 2 mhashes + c
+        , {- h3 -} shiftRightZfBy 0 <| getNthArray 3 mhashes + d
+        , {- h4 -} shiftRightZfBy 0 <| getNthArray 4 mhashes + e
+        , {- h5 -} shiftRightZfBy 0 <| getNthArray 5 mhashes + f
+        , {- h6 -} shiftRightZfBy 0 <| getNthArray 6 mhashes + g
+        , {- h7 -} shiftRightZfBy 0 <| getNthArray 7 mhashes + h
         ]
