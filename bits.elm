@@ -92,6 +92,12 @@ printBits x =
     in
     List.foldl fn "" (List.map toString <| toBitsList x)
 
+decToHexString : Bits -> String
+decToHexString n =
+    if n == 0 then
+        ""
+    else
+        decToHexString(floor(Basics.toFloat n / 16)) ++ toString (n % 16)
 
 toHexList : Bits -> List String
 toHexList b =

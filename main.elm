@@ -341,7 +341,25 @@ intTo256Block n =
     in
     List.append (List.repeat (4 - len) 0) results
 
+createBlock : List Int -> Core.Block
+createBlock lis =
+    case lis of
+        [a,b,c,d] ->
+            [or d <| or (shiftLeftBy 8 c) <|or (shiftLeftBy 24 a) (shiftLeftBy 16 b) ]
+        _ -> []
 
+encodeBlocks : List Int -> List Core.Block
+encodeBlocks lis =
+    case lis of
+        [] -> []
+        _ ->
+            let
+                curr = take 4 lis
+                rest = drop 4 lis
+            in
+                (createBlock curr)::(encodeBlocks rest)
+
+computeBlocks : String -> List Int
 computeBlocks msg =
     let
         modulo256 =
@@ -376,7 +394,6 @@ computeBlocks msg =
     in
     List.append cumul lengthHex
 
-
 update : Msg -> Model -> Model
 update msg model =
     case msg of
@@ -385,8 +402,7 @@ update msg model =
 
         UpdateField s ->
             let
-                newBlocks =
-                    computeBlocks s
+                newBlocks = log "result " <| encodeBlocks <| computeBlocks s
             in
             { model
                 | input = s
