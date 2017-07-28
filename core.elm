@@ -168,8 +168,6 @@ hashComputerIter block q n initialState k =
 computeHash : Block -> Int -> Array Bits -> Array Bits -> Array Bits
 computeHash block t state k =
     let
-        aaa =
-            log "computeHash" t
 
         a =
             getNthArray 0 state
@@ -195,29 +193,7 @@ computeHash block t state k =
         h =
             getNthArray 7 state
 
-        paa =
-            log "a" (printHex a)
 
-        pab =
-            log "b" (printHex b)
-
-        pac =
-            log "c" (printHex c)
-
-        pad =
-            log "d" (printHex d)
-
-        pae =
-            log "e" (printHex e)
-
-        paf =
-            log "f" (printHex f)
-
-        pag =
-            log "g" (printHex g)
-
-        pah =
-            log "h" (printHex h)
 
         kt =
             getNthArray t k
@@ -225,29 +201,10 @@ computeHash block t state k =
         t1 =
             h + Bits.s1 e + Bits.choose e f g + kt + getSchedule t block
 
-        hhh =
-            log "" (printHex h)
-
-        hhj =
-            log "" (printHex <| Bits.s1 e)
-
-        hhk =
-            log "" (printHex <| Bits.choose e f g)
-
-        hhl =
-            log "" (printHex kt)
-
-        hhm =
-            log "" (printHex <| getSchedule t block)
 
         t2 =
             Bits.s0 a + Bits.majority a b c
 
-        hhz =
-            log "" (printHex <| Bits.s0 a)
-
-        hhy =
-            log "" (printHex <| Bits.majority a b c)
 
         mhashes =
             Array.map (\n -> getNthArray n state) (initialize 8 (\n -> n + 8))
