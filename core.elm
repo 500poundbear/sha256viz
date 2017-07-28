@@ -168,7 +168,6 @@ hashComputerIter block q n initialState k =
 computeHash : Block -> Int -> Array Bits -> Array Bits -> Array Bits
 computeHash block t state k =
     let
-
         a =
             getNthArray 0 state
 
@@ -193,18 +192,14 @@ computeHash block t state k =
         h =
             getNthArray 7 state
 
-
-
         kt =
             getNthArray t k
 
         t1 =
             h + Bits.s1 e + Bits.choose e f g + kt + getSchedule t block
 
-
         t2 =
             Bits.s0 a + Bits.majority a b c
-
 
         mhashes =
             Array.map (\n -> getNthArray n state) (initialize 8 (\n -> n + 8))

@@ -4,15 +4,16 @@ import Array exposing (..)
 import Basics exposing (..)
 import Bits exposing (..)
 import Bitwise exposing (..)
+import Char exposing (..)
 import Core exposing (..)
+import Debug exposing (..)
 import Dict exposing (..)
 import Html exposing (..)
 import Html.Attributes exposing (..)
+import Html.Events exposing (onClick, onInput)
 import List exposing (..)
 import String exposing (..)
-import Html.Events exposing (onClick, onInput)
-import Char exposing (..)
-import Debug exposing (..)
+
 
 test : Bits.Bits
 test =
@@ -106,6 +107,7 @@ model =
     , blockState = defaultBlockState
     }
 
+
 initialState : Array Core.Bits
 initialState =
     Array.fromList
@@ -128,7 +130,9 @@ initialState =
         ]
 
 
-type Msg = Calculate | UpdateField String
+type Msg
+    = Calculate
+    | UpdateField String
 
 
 getNth : Int -> Array Core.Bits -> Int
@@ -261,7 +265,7 @@ view model =
              ,
           -}
           input [ type_ "text", placeholder "message", onInput UpdateField ] []
-        , button [onClick Calculate] [ text "compute Hash" ]
+        , button [ onClick Calculate ] [ text "compute Hash" ]
         , schedulePrinter
         , stepsPrinter
         ]
@@ -269,36 +273,47 @@ view model =
 
 
 {- Assumption here is that every state is stored in round -}
-
 {- We need to track round because it determines lookup -}
-computeRound : Block -> Array Core.Bits -> Int -> Dict Int (Array Core.Bits) -> Dict Int (Array Core.Bits)
-computeRound block k r oldDict  =
-    let
-        prevState = case (Dict.get (r - 1) oldDict) of
-            Nothing ->
-                Array.fromList []
-            Just v -> v
-    in
-        Dict.insert r (computeHash block r prevState k) oldDict
 
-{- computeRounds takes block, emptyDict, rounds (64)  and returns a dictionary-}
+
+computeRound : Block -> Array Core.Bits -> Int -> Dict Int (Array Core.Bits) -> Dict Int (Array Core.Bits)
+computeRound block k r oldDict =
+    let
+        prevState =
+            case Dict.get (r - 1) oldDict of
+                Nothing ->
+                    Array.fromList []
+
+                Just v ->
+                    v
+    in
+    Dict.insert r (computeHash block r prevState k) oldDict
+
+
+
+{- computeRounds takes block, emptyDict, rounds (64)  and returns a dictionary -}
+
+
 computeRounds : Block -> Dict Int (Array Core.Bits) -> Array Core.Bits -> Int -> Dict Int (Array Core.Bits)
 computeRounds block oldDict k rounds =
-
     List.foldl (computeRound block k) oldDict (range 1 64)
 
 
 stringToChars : String -> List Char
 stringToChars str =
-    case (uncons str) of
-        Just (h, rst) -> List.append [h] (stringToChars rst)
-        Nothing -> []
+    case uncons str of
+        Just ( h, rst ) ->
+            List.append [ h ] (stringToChars rst)
+
+        Nothing ->
+            []
 
 
-{- Each block contains 512 bits (64 words x (8 bits))-}
+
+{- Each block contains 512 bits (64 words x (8 bits)) -}
 {- For every 4 characters, jam them into a single word -}
-
 {- Each block contains 16 32-bit integers  [ 32 * 16] -}
+
 
 calculatePadLength : Int -> Int
 calculatePadLength n =
@@ -306,6 +321,7 @@ calculatePadLength n =
         8 + calculatePadLength (n - 56)
     else
         56 - n
+
 
 intTo256Block : Int -> List Int
 intTo256Block n =
@@ -315,31 +331,50 @@ intTo256Block n =
             if q == 0 then
                 []
             else
-                List.append (driver(floor ((Basics.toFloat q)/256))) [q % 256]
-        results = driver n
-        len = List.length results
+                List.append (driver (floor (Basics.toFloat q / 256))) [ q % 256 ]
+
+        results =
+            driver n
+
+        len =
+            List.length results
     in
-        List.append (List.repeat (4 - len) 0) (results)
+    List.append (List.repeat (4 - len) 0) results
 
 
 computeBlocks msg =
     let
-        modulo256 = (\n -> n % 256)
-        chars = stringToChars msg
-        charsLength = List.length chars
+        modulo256 =
+            \n -> n % 256
 
-        codes = List.map (modulo256 << toCode) chars
-        codesPlus1 = List.append codes [128]
-        zeros = List.repeat (calculatePadLength (List.length codesPlus1)) 0
+        chars =
+            stringToChars msg
 
-        cumul = List.append codesPlus1 zeros
+        charsLength =
+            List.length chars
 
-        lengthP1 = floor <| (Basics.toFloat charsLength * 8)/(Basics.toFloat <| shiftLeftBy 1 32)
-        lengthP2 = (charsLength * 8)%(shiftLeftBy 1 32)
+        codes =
+            List.map (modulo256 << toCode) chars
 
-        lengthHex = List.append (intTo256Block lengthP1) (intTo256Block lengthP2)
+        codesPlus1 =
+            List.append codes [ 128 ]
+
+        zeros =
+            List.repeat (calculatePadLength (List.length codesPlus1)) 0
+
+        cumul =
+            List.append codesPlus1 zeros
+
+        lengthP1 =
+            floor <| (Basics.toFloat charsLength * 8) / (Basics.toFloat <| shiftLeftBy 1 32)
+
+        lengthP2 =
+            (charsLength * 8) % shiftLeftBy 1 32
+
+        lengthHex =
+            List.append (intTo256Block lengthP1) (intTo256Block lengthP2)
     in
-        List.append cumul lengthHex
+    List.append cumul lengthHex
 
 
 update : Msg -> Model -> Model
@@ -347,13 +382,16 @@ update msg model =
     case msg of
         Calculate ->
             model
+
         UpdateField s ->
             let
-                newBlocks = computeBlocks s
+                newBlocks =
+                    computeBlocks s
             in
-                { model
+            { model
                 | input = s
-                }
+            }
+
 
 main =
     Html.beginnerProgram
